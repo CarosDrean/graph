@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	tree := node.New(ordered.NewOrderedInt())
+	tree := node.NewTree(ordered.NewOrderedInt())
 	tree.Add(15)
 	tree.Add(5)
 	tree.Add(4)
@@ -29,6 +29,7 @@ func main() {
 	tree.Add(23)
 
 	tree.PrintTree()
+
 	fmt.Printf("\n=========================\n")
 
 	tree.Delete(5)

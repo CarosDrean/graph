@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"log"
 
 	"graph/ordered"
 )
@@ -19,12 +20,34 @@ type Tree struct {
 	ordered ordered.Ordered
 }
 
-func New(ordered ordered.Ordered) Tree {
+func NewTree(ordered ordered.Ordered) Tree {
 	return Tree{ordered: ordered}
+}
+
+func (t *Tree) Add(value any) {
+	if !t.ordered.IsValidType(value) {
+		log.Printf("the type of %v is invalid\n", value)
+		return
+	}
+
+	t.root = t.add(t.root, value)
+}
+
+func (t *Tree) Delete(value any) {
+	if !t.ordered.IsValidType(value) {
+		log.Printf("the type of %v is invalid\n", value)
+		return
+	}
+
+	t.root = t.delete(t.root, value)
 }
 
 func (t *Tree) PrintTree() {
 	t.printTree(t.root, 0)
+}
+
+func (t *Tree) PrintInOrder() {
+	printInOrder(t.root)
 }
 
 func (t *Tree) printTree(root *Node, spacing int) {
@@ -45,10 +68,6 @@ func (t *Tree) printTree(root *Node, spacing int) {
 	t.printTree(root.left, spacing)
 }
 
-func (t *Tree) Add(value any) {
-	t.root = t.add(t.root, value)
-}
-
 func (t *Tree) add(current *Node, data any) *Node {
 	if current == nil {
 		return &Node{data: data, height: 1}
@@ -66,6 +85,41 @@ func (t *Tree) add(current *Node, data any) *Node {
 	}
 
 	// one is for the current node
+	current.height = 1 + max(height(current.left), height(current.right))
+
+	current = balancer(current)
+
+	return current
+}
+
+func (t *Tree) delete(current *Node, data any) *Node {
+	if current == nil {
+		return nil
+	}
+
+	if t.ordered.IsEqual(current.data, data) {
+		// ifs replace actual node whit opposite node, opposite node can be nil
+		if current.left == nil {
+			return current.right
+		}
+
+		if current.right == nil {
+			return current.left
+		}
+
+		// here use right for no break the tree
+		minRight := findMin(current.right)
+		current.data = minRight.data
+
+		current.right = t.delete(current.right, minRight.data)
+	}
+
+	if t.ordered.IsLeft(current.data, data) {
+		current.left = t.delete(current.left, data)
+	} else {
+		current.right = t.delete(current.right, data)
+	}
+
 	current.height = 1 + max(height(current.left), height(current.right))
 
 	current = balancer(current)
@@ -127,62 +181,19 @@ func rotateLeft(node *Node) *Node {
 	return childRight
 }
 
-func (t *Tree) Delete(data any) {
-	t.root = t.delete(t.root, data)
-}
-
-func (t *Tree) delete(current *Node, data any) *Node {
-	if current == nil {
-		return nil
-	}
-
-	if t.ordered.IsEqual(current.data, data) {
-		// ifs replace actual node whit opposite node, opposite node can be nil
-		if current.left == nil {
-			return current.right
-		}
-
-		if current.right == nil {
-			return current.left
-		}
-
-		// here use right for no break the tree
-		minRight := t.findMin(current.right)
-		current.data = minRight.data
-
-		current.right = t.delete(current.right, minRight.data)
-	}
-
-	if t.ordered.IsLeft(current.data, data) {
-		current.left = t.delete(current.left, data)
-	} else {
-		current.right = t.delete(current.right, data)
-	}
-
-	current.height = 1 + max(height(current.left), height(current.right))
-
-	current = balancer(current)
-
-	return current
-}
-
-func (t *Tree) findMin(n *Node) *Node {
+func findMin(n *Node) *Node {
 	if n.left == nil {
 		return n
 	}
 
-	return t.findMin(n.left)
+	return findMin(n.left)
 }
 
-func (t *Tree) Print() {
-	t.print(t.root)
-}
-
-func (t *Tree) print(n *Node) {
+func printInOrder(n *Node) {
 	if n != nil {
-		t.print(n.left)
+		printInOrder(n.left)
 		fmt.Printf("%v \n", n.data)
-		t.print(n.right)
+		printInOrder(n.right)
 	}
 }
 
