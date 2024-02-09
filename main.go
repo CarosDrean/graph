@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
-	"graph/node"
+	"graph/graph"
 	"graph/ordered"
 )
 
 func main() {
-	tree := node.NewTree(ordered.NewOrderedInt())
+	tree := graph.NewTree(ordered.NewOrderedInt())
 	tree.Add(15)
 	tree.Add(5)
 	tree.Add(4)

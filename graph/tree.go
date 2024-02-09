@@ -1,4 +1,4 @@
-package node
+package graph
 
 import (
 	"fmt"
@@ -7,15 +7,15 @@ import (
 	"graph/ordered"
 )
 
-type Node struct {
+type node struct {
 	data   any
 	height int
-	left   *Node
-	right  *Node
+	left   *node
+	right  *node
 }
 
 type Tree struct {
-	root *Node
+	root *node
 
 	ordered ordered.Ordered
 }
@@ -43,34 +43,16 @@ func (t *Tree) Delete(value any) {
 }
 
 func (t *Tree) PrintTree() {
-	t.printTree(t.root, 0)
+	printTree(t.root, 0)
 }
 
 func (t *Tree) PrintInOrder() {
 	printInOrder(t.root)
 }
 
-func (t *Tree) printTree(root *Node, spacing int) {
-	if root == nil {
-		return
-	}
-
-	spacing += 5
-
-	t.printTree(root.right, spacing)
-
-	fmt.Println()
-	for i := 5; i < spacing; i++ {
-		fmt.Print(" ")
-	}
-	fmt.Printf("%d", root.data)
-
-	t.printTree(root.left, spacing)
-}
-
-func (t *Tree) add(current *Node, data any) *Node {
+func (t *Tree) add(current *node, data any) *node {
 	if current == nil {
-		return &Node{data: data, height: 1}
+		return &node{data: data, height: 1}
 	}
 
 	if t.ordered.IsEqual(current.data, data) {
@@ -84,7 +66,7 @@ func (t *Tree) add(current *Node, data any) *Node {
 		current.right = t.add(current.right, data)
 	}
 
-	// one is for the current node
+	// one is for the current graph
 	current.height = 1 + max(height(current.left), height(current.right))
 
 	current = balancer(current)
@@ -92,13 +74,13 @@ func (t *Tree) add(current *Node, data any) *Node {
 	return current
 }
 
-func (t *Tree) delete(current *Node, data any) *Node {
+func (t *Tree) delete(current *node, data any) *node {
 	if current == nil {
 		return nil
 	}
 
 	if t.ordered.IsEqual(current.data, data) {
-		// ifs replace actual node whit opposite node, opposite node can be nil
+		// this ifs replace actual graph whit opposite graph, opposite graph can be nil
 		if current.left == nil {
 			return current.right
 		}
@@ -107,7 +89,9 @@ func (t *Tree) delete(current *Node, data any) *Node {
 			return current.left
 		}
 
-		// here use right for no break the tree
+		// find the node with the lowest value of the largest subtree so that it remains as a replacement
+		// for the node that is being eliminated, then, since it is a replacement for the node that is being eliminated,
+		// eliminate the node from the right subtree
 		minRight := findMin(current.right)
 		current.data = minRight.data
 
@@ -127,7 +111,7 @@ func (t *Tree) delete(current *Node, data any) *Node {
 	return current
 }
 
-func balancer(node *Node) *Node {
+func balancer(node *node) *node {
 	balance := calculateBalance(node)
 
 	// left - left
@@ -155,7 +139,7 @@ func balancer(node *Node) *Node {
 	return node
 }
 
-func rotateRight(node *Node) *Node {
+func rotateRight(node *node) *node {
 	childLeft := node.left
 	childRightOfLeft := childLeft.right
 
@@ -168,7 +152,7 @@ func rotateRight(node *Node) *Node {
 	return childLeft
 }
 
-func rotateLeft(node *Node) *Node {
+func rotateLeft(node *node) *node {
 	childRight := node.right
 	childLeftOfRight := childRight.left
 
@@ -181,7 +165,21 @@ func rotateLeft(node *Node) *Node {
 	return childRight
 }
 
-func findMin(n *Node) *Node {
+func calculateBalance(n *node) int {
+	if n == nil {
+		return 0
+	}
+	return height(n.left) - height(n.right)
+}
+
+func height(n *node) int {
+	if n == nil {
+		return 0
+	}
+	return n.height
+}
+
+func findMin(n *node) *node {
 	if n.left == nil {
 		return n
 	}
@@ -189,24 +187,28 @@ func findMin(n *Node) *Node {
 	return findMin(n.left)
 }
 
-func printInOrder(n *Node) {
+func printTree(root *node, spacing int) {
+	if root == nil {
+		return
+	}
+
+	spacing += 5
+
+	printTree(root.right, spacing)
+
+	fmt.Println()
+	for i := 5; i < spacing; i++ {
+		fmt.Print(" ")
+	}
+	fmt.Printf("%d", root.data)
+
+	printTree(root.left, spacing)
+}
+
+func printInOrder(n *node) {
 	if n != nil {
 		printInOrder(n.left)
 		fmt.Printf("%v \n", n.data)
 		printInOrder(n.right)
 	}
-}
-
-func calculateBalance(n *Node) int {
-	if n == nil {
-		return 0
-	}
-	return height(n.left) - height(n.right)
-}
-
-func height(n *Node) int {
-	if n == nil {
-		return 0
-	}
-	return n.height
 }
